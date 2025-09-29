@@ -1,0 +1,22 @@
+{
+  "manifest_version": 3,
+  "name": "Hide YouTube Duration",
+  "version": "1.0",
+  "description": "Hides video durations on YouTube thumbnails and video player.",
+  "permissions": ["scripting"],
+  "host_permissions": [
+    "https://www.youtube.com/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": ["https://www.youtube.com/*"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "icons": {
+    "16": "icon16.png",
+    "48": "icon48.png",
+    "128": "icon128.png"
+  }
+}
