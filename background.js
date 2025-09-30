@@ -1,4 +1,4 @@
 // background.js
 chrome.runtime.onInstalled.addListener(() => {
-  chrome.storage.sync.set({ hideEnabled: true });
+  chrome.storage.sync.set({ hideEnabled: true, hideProgressBar: true });
 });

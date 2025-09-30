@@ -1,131 +1,129 @@
-// Add hover listeners to thumbnails to re-hide overlays
-// Hides video durations on YouTube thumbnails and video player
-function hideDurations() {
-  chrome.storage.sync.get(["hideEnabled"], function (result) {
-    const thumbnailSelectors = [
-      ".yt-thumbnail-overlay-badge-view-model",
-      ".yt-badge-shape__text",
-    ];
-    const playerSelectors = [
-      ".ytp-time-duration",
-      ".ytp-time-display",
-      ".ytp-chrome-bottom .ytp-time-duration",
-      ".ytp-chrome-bottom .ytp-time-display",
-    ];
-    if (result.hideEnabled) {
-      // Hide durations on thumbnails
-      thumbnailSelectors.forEach((selector) => {
-        document.querySelectorAll(selector).forEach((el) => {
-          el.textContent = "";
-          el.style.setProperty("display", "none", "important");
-          el.style.setProperty("visibility", "hidden", "important");
-          el.style.setProperty("opacity", "0", "important");
-        });
-      });
-      // Also try to hide overlays in shadow DOM
-      document.querySelectorAll("ytd-thumbnail").forEach((thumb) => {
-        if (thumb.shadowRoot) {
-          thumb.shadowRoot
-            .querySelectorAll(
-              "ytd-thumbnail-overlay-time-status-renderer, span, div"
-            )
-            .forEach((el) => {
-              el.textContent = "";
-              el.style.setProperty("display", "none", "important");
-              el.style.setProperty("visibility", "hidden", "important");
-              el.style.setProperty("opacity", "0", "important");
-            });
-        }
-      });
-      // Hide duration in the video player
-      playerSelectors.forEach((selector) => {
-        document.querySelectorAll(selector).forEach((el) => {
-          el.style.visibility = "hidden";
-        });
-      });
-    } else {
-      // Restore durations on thumbnails
-      thumbnailSelectors.forEach((selector) => {
-        document.querySelectorAll(selector).forEach((el) => {
-          el.style.removeProperty("display");
-          el.style.removeProperty("visibility");
-          el.style.removeProperty("opacity");
-        });
-      });
-      // Restore overlays in shadow DOM
-      document.querySelectorAll("ytd-thumbnail").forEach((thumb) => {
-        if (thumb.shadowRoot) {
-          thumb.shadowRoot
-            .querySelectorAll(
-              "ytd-thumbnail-overlay-time-status-renderer, span, div"
-            )
-            .forEach((el) => {
-              el.style.removeProperty("display");
-              el.style.removeProperty("visibility");
-              el.style.removeProperty("opacity");
-            });
-        }
-      });
-      // Restore duration in the video player
-      playerSelectors.forEach((selector) => {
-        document.querySelectorAll(selector).forEach((el) => {
-          el.style.removeProperty("visibility");
-        });
-      });
-    }
-  });
+const THUMBNAIL_SELECTORS = [
+  ".yt-thumbnail-overlay-badge-view-model",
+  ".yt-badge-shape__text",
+];
+const PLAYER_SELECTORS = [
+  ".ytp-time-duration",
+  ".ytp-time-display",
+  ".ytp-chrome-bottom .ytp-time-duration",
+  ".ytp-chrome-bottom .ytp-time-display",
+];
+const PROGRESS_BAR_SELECTOR = ".ytp-progress-bar-container";
+const PROGRESS_BAR_STYLE_ID = "hyd-progress-bar-style";
 
-  // Add hover listeners to thumbnails to re-hide overlays
-  function addHoverListeners() {
-    document.querySelectorAll("ytd-thumbnail, #thumbnail").forEach((thumb) => {
-      thumb.addEventListener("mouseover", hideDurations, { passive: true });
-      thumb.addEventListener("mouseout", hideDurations, { passive: true });
-    });
+function injectProgressBarStyle() {
+  if (!document.getElementById(PROGRESS_BAR_STYLE_ID)) {
+    const style = document.createElement("style");
+    style.id = PROGRESS_BAR_STYLE_ID;
+    style.textContent = `${PROGRESS_BAR_SELECTOR} { display: none !important; visibility: hidden !important; opacity: 0 !important; }`;
+    document.head.appendChild(style);
   }
-  addHoverListeners();
-  // Hide durations on thumbnails
-  // Try all known selectors and also generic overlays
-  const thumbnailSelectors = [
-    ".yt-thumbnail-overlay-badge-view-model",
-    ".yt-badge-shape__text",
-  ];
-  thumbnailSelectors.forEach((selector) => {
-    document.querySelectorAll(selector).forEach((el) => {
-      el.textContent = "";
-      el.style.setProperty("display", "none", "important");
-      el.style.setProperty("visibility", "hidden", "important");
-      el.style.setProperty("opacity", "0", "important");
-    });
-  });
-  // Also try to hide overlays in shadow DOM
-  document.querySelectorAll("ytd-thumbnail").forEach((thumb) => {
-    if (thumb.shadowRoot) {
-      thumb.shadowRoot
-        .querySelectorAll(
-          "ytd-thumbnail-overlay-time-status-renderer, span, div"
-        )
-        .forEach((el) => {
-          el.textContent = "";
-          el.style.setProperty("display", "none", "important");
-          el.style.setProperty("visibility", "hidden", "important");
-          el.style.setProperty("opacity", "0", "important");
-        });
-    }
-  });
+}
 
-  // Hide duration in the video player
-  const playerSelectors = [
-    ".ytp-time-duration",
-    ".ytp-time-display",
-    ".ytp-chrome-bottom .ytp-time-duration",
-    ".ytp-chrome-bottom .ytp-time-display",
-  ];
-  playerSelectors.forEach((selector) => {
-    document.querySelectorAll(selector).forEach((el) => {
-      el.style.visibility = "hidden";
-    });
+function removeProgressBarStyle() {
+  const style = document.getElementById(PROGRESS_BAR_STYLE_ID);
+  if (style) style.remove();
+}
+
+function setStyles(elements, styles) {
+  elements.forEach((el) => {
+    for (const [prop, value] of Object.entries(styles)) {
+      el.style.setProperty(prop, value, "important");
+    }
   });
 }
+
+function removeStyles(elements, props) {
+  elements.forEach((el) => {
+    props.forEach((prop) => el.style.removeProperty(prop));
+  });
+}
+
+function handleThumbnails(hide) {
+  const styleProps = ["display", "visibility", "opacity"];
+  if (hide) {
+    THUMBNAIL_SELECTORS.forEach((selector) => {
+      setStyles(document.querySelectorAll(selector), {
+        display: "none",
+        visibility: "hidden",
+        opacity: "0",
+      });
+    });
+    document.querySelectorAll("ytd-thumbnail").forEach((thumb) => {
+      if (thumb.shadowRoot) {
+        setStyles(
+          thumb.shadowRoot.querySelectorAll(
+            "ytd-thumbnail-overlay-time-status-renderer, span, div"
+          ),
+          { display: "none", visibility: "hidden", opacity: "0" }
+        );
+      }
+    });
+  } else {
+    THUMBNAIL_SELECTORS.forEach((selector) => {
+      removeStyles(document.querySelectorAll(selector), styleProps);
+    });
+    document.querySelectorAll("ytd-thumbnail").forEach((thumb) => {
+      if (thumb.shadowRoot) {
+        removeStyles(
+          thumb.shadowRoot.querySelectorAll(
+            "ytd-thumbnail-overlay-time-status-renderer, span, div"
+          ),
+          styleProps
+        );
+      }
+    });
+  }
+}
+
+function handlePlayerDurations(hide) {
+  if (hide) {
+    PLAYER_SELECTORS.forEach((selector) => {
+      setStyles(document.querySelectorAll(selector), { visibility: "hidden" });
+    });
+  } else {
+    PLAYER_SELECTORS.forEach((selector) => {
+      removeStyles(document.querySelectorAll(selector), ["visibility"]);
+    });
+  }
+}
+
+function handleProgressBar(hide) {
+  if (hide) {
+    injectProgressBarStyle();
+  } else {
+    removeProgressBarStyle();
+    removeStyles(document.querySelectorAll(PROGRESS_BAR_SELECTOR), [
+      "display",
+      "visibility",
+      "opacity",
+    ]);
+  }
+}
+
+function hideDurations() {
+  try {
+    chrome.storage.sync.get(
+      ["hideEnabled", "hideProgressBar"],
+      function (result) {
+        handleThumbnails(!!result.hideEnabled);
+        handlePlayerDurations(!!result.hideEnabled);
+        handleProgressBar(!!result.hideProgressBar);
+      }
+    );
+  } catch (e) {
+    // Suppress extension context invalidated errors
+    // console.error(e);
+  }
+}
+
+function addHoverListeners() {
+  document.querySelectorAll("ytd-thumbnail, #thumbnail").forEach((thumb) => {
+    thumb.addEventListener("mouseover", hideDurations, { passive: true });
+    thumb.addEventListener("mouseout", hideDurations, { passive: true });
+  });
+}
+addHoverListeners();
 
 // Observe DOM changes to hide durations dynamically
 const observer = new MutationObserver(hideDurations);

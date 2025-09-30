@@ -4,33 +4,6 @@
     <title>Hide YouTube Duration</title>
     <style>
       body { font-family: sans-serif; margin: 16px; }
-      label { font-size: 16px; display: flex; align-items: center; gap: 8px; }
-      input[type="checkbox"] {
-        width: 22px;
-        height: 22px;
-        accent-color: #ff0000;
-        border-radius: 6px;
-        border: 2px solid #ccc;
-        transition: box-shadow 0.2s;
-        box-shadow: 0 1px 4px rgba(0,0,0,0.08);
-      }
-      input[type="checkbox"]:checked {
-        border-color: #ff0000;
-        box-shadow: 0 2px 8px rgba(255,0,0,0.12);
-      }
-    </style>
-  </head>
-  <body>
-    <label class="switch">
-      <input type="checkbox" id="toggleHide" />
-      <span class="slider">
-        <span class="knob"></span>
-      </span>
-      <span style="margin-left:16px;">Hide YouTube Duration</span>
-    </label>
-    <script src="popup.js"></script>
-    <style>
-      body { font-family: sans-serif; margin: 16px; }
       .switch {
         display: flex;
         align-items: center;
@@ -42,7 +15,7 @@
       }
       .slider {
         position: relative;
-        width: 90px;
+        width: 84px;
         height: 28px;
         background: #ccc;
         border-radius: 14px;
@@ -68,6 +41,24 @@
         background: #ff0000;
       }
       input:checked + .slider .knob {
-        left: 32px;
+        left: 28px;
       }
     </style>
+  </head>
+  <body>
+    <label class="switch">
+      <input type="checkbox" id="toggleHide" />
+      <span class="slider">
+        <span class="knob"></span>
+      </span>
+      <span style="margin-left:16px;">Hide YouTube Duration</span>
+    </label>
+    <br><br>
+    <label class="switch">
+      <input type="checkbox" id="toggleProgress" />
+      <span class="slider">
+        <span class="knob"></span>
+      </span>
+      <span style="margin-left:16px;">Hide Progress Bar</span>
+    </label>
+  <script src="popup.js"></script>
